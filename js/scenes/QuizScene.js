@@ -4,10 +4,39 @@ import { showResultPopup } from "../components/ResultPopup.js";
 import { showBuffPopup } from "../components/BuffPopup.js";
 import LoadingScene from "./LoadingScene.js";
 import StartScene from "./StartScene.js";
+import { applyBackground } from "../config/BackgroundSystem.js";
+import Mascot from "../components/Mascot/Mascot.js";
 
 export default function QuizScene() {
     const div = document.createElement("div");
     div.className = "quiz-scene";
+    applyBackground(div);
+
+    // layer UI riêng
+    const uiLayer = document.createElement("div");
+    uiLayer.className = "ui-layer";
+
+    // 🎮 mascots
+    const player = Mascot({
+        mascotName: "cat",
+        role: "player",
+    });
+
+    const enemy = Mascot({
+        mascotName: "dog",
+        role: "enemy",
+    });
+
+    const princess = Mascot({
+        mascotName: "princess",
+        role: "princess",
+    });
+
+    // append theo thứ tự
+    div.appendChild(player.el);
+    div.appendChild(enemy.el);
+    div.appendChild(princess.el);
+    div.appendChild(uiLayer);
 
     const questions = window.questions;
     const totalQuestions = questions.length;
@@ -26,9 +55,19 @@ export default function QuizScene() {
     function render() {
         const q = bossQuestions[currentQuestion];
 
-        if (!q) return;
+        // 🔥 nếu không còn câu hỏi → win luôn
+        if (!q) {
+            showResultPopup({
+                win: true,
+                onRestart: () => {
+                    gameState.resetGame();
+                    router.navigate(StartScene);
+                },
+            });
+            return;
+        }
 
-        div.innerHTML = `
+        uiLayer.innerHTML = `
       <div class="hud">
         <h2>👹 Boss ${gameState.bossIndex + 1}</h2>
         <p>❤️ Bạn: ${gameState.playerLives} | 🐲 Boss: ${gameState.bossLives}</p>
@@ -41,18 +80,19 @@ export default function QuizScene() {
       </div>
     `;
 
-        const answersDiv = div.querySelector("#answers");
+        const answersDiv = uiLayer.querySelector("#answers");
+        if (!answersDiv) return;
 
         // ========= MULTIPLE CHOICE =========
         if (q.typeQuestion === 100) {
             let answersToShow = q.answers.map((a, i) => i);
 
             // áp dụng buff 50/50
-            if (gameState.use5050) {
+            if (gameState.buffs.fiftyFifty) {
                 const wrong = answersToShow.filter(i => i !== q.correctIndex);
                 wrong.splice(0, wrong.length - 1);
                 answersToShow = [q.correctIndex, ...wrong];
-                gameState.use5050 = false;
+                gameState.buffs.fiftyFifty = false;
             }
 
             answersToShow.forEach(i => {
@@ -96,17 +136,23 @@ export default function QuizScene() {
     // =============================
     // HANDLE ANSWER
     // =============================
-    function answer(correct) {
+    async function answer(correct) {
         if (correct) {
-            const damage = gameState.doubleDamage ? 2 : 1;
-            gameState.bossLives -= damage;
-            gameState.doubleDamage = false;
+            await player.attack();
+            await enemy.sad();
+
+            gameState.damageBoss();
+
         } else {
+            await enemy.attack();
+            await player.sad();
+
             gameState.playerLives--;
         }
 
         // ===== PLAYER LOSE =====
         if (gameState.playerLives <= 0) {
+            await player.dead();
             showResultPopup({
                 win: false,
                 onRestart: () => router.navigate(StartScene),
@@ -116,6 +162,7 @@ export default function QuizScene() {
 
         // ===== BOSS DEFEATED =====
         if (gameState.bossLives <= 0) {
+            await enemy.dead();
 
             const nextStartIndex = (gameState.bossIndex + 1) * QUESTIONS_PER_BOSS;
 
@@ -130,9 +177,9 @@ export default function QuizScene() {
 
             // 👉 còn câu hỏi → chọn buff và sang boss tiếp
             showBuffPopup((buff) => {
-                if (buff === "5050") gameState.use5050 = true;
-                if (buff === "life") gameState.playerLives++;
-                if (buff === "double") gameState.doubleDamage = true;
+                if (buff === "5050") gameState.activate5050();
+                if (buff === "life") gameState.addLife();
+                if (buff === "double") gameState.activateDoubleDamage();
 
                 gameState.bossIndex++;
                 gameState.bossLives = 3;
