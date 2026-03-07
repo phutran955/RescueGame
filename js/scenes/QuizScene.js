@@ -6,10 +6,14 @@ import LoadingScene from "./LoadingScene.js";
 import StartScene from "./StartScene.js";
 import { applyBackground } from "../config/BackgroundSystem.js";
 import Mascot from "../components/Mascot/Mascot.js";
+import { playSound, playBGM } from "../components/SoundManager.js";
 
 export default function QuizScene() {
     const div = document.createElement("div");
     div.className = "quiz-scene";
+
+    playBGM();
+
     applyBackground(div);
 
     // layer UI riêng
@@ -138,13 +142,32 @@ export default function QuizScene() {
     // =============================
     async function answer(correct) {
         if (correct) {
+            playSound("correct");
+
             await player.attack();
+
+            enemy.el.classList.add("hit-effect");
+
+            setTimeout(() => {
+                enemy.el.classList.remove("hit-effect");
+            }, 250);
+
             await enemy.sad();
 
             gameState.damageBoss();
 
         } else {
+
+            playSound("wrong");
+
             await enemy.attack();
+
+            player.el.classList.add("hit-effect");
+
+            setTimeout(() => {
+                player.el.classList.remove("hit-effect");
+            }, 250);
+
             await player.sad();
 
             gameState.playerLives--;
@@ -152,6 +175,7 @@ export default function QuizScene() {
 
         // ===== PLAYER LOSE =====
         if (gameState.playerLives <= 0) {
+            playSound("lose");
             await player.dead();
             showResultPopup({
                 win: false,
@@ -168,6 +192,8 @@ export default function QuizScene() {
 
             // 👉 nếu không còn câu hỏi → WIN
             if (nextStartIndex >= totalQuestions) {
+                await enemy.dead();
+                playSound("win");
                 showResultPopup({
                     win: true,
                     onRestart: () => router.navigate(StartScene),
