@@ -1,3 +1,7 @@
+body{
+    font-family: "Comic Neue", "Baloo 2", sans-serif;
+}
+
 /* =========================
    QUIZ SCENE CONTAINER
 ========================= */
@@ -98,22 +102,39 @@
 .question-box {
     position: relative;
     z-index: 6;
-    width: 700px;
-    max-width: 90%;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    width: 720px;
+    max-width: 92%;
+    background: linear-gradient(180deg,#ffffff,#f7fbff);
+    padding: 35px;
+    border-radius: 25px;
+
+    border: 6px solid #ffd43b;
+
+    box-shadow:
+        0 12px 0 #f4a100,
+        0 20px 40px rgba(0,0,0,0.25);
+
     text-align: center;
-    animation: fadeIn 0.4s ease;
+
+    animation: popIn 0.4s ease;
     margin: auto;
     margin-top: 120px;
 }
 
-.question-box h3 {
-    margin-bottom: 20px;
-    font-size: 20px;
-    color: #333;
+.question-box h3{
+    font-size:24px;
+    color:#2c3e50;
+}
+
+@keyframes popIn{
+    0%{
+        transform:scale(0.7);
+        opacity:0;
+    }
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
 }
 
 /* =========================
@@ -133,6 +154,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding-top: 30px;
 }
 
 .answer-btn {

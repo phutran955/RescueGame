@@ -142,6 +142,8 @@ export default function QuizScene() {
     // =============================
     async function answer(correct) {
         if (correct) {
+            showFloatingText("🎉 GIỎI LẮM!", true);
+
             playSound("correct");
 
             await player.attack();
@@ -157,6 +159,7 @@ export default function QuizScene() {
             gameState.damageBoss();
 
         } else {
+            showFloatingText("😅 SAI RỒI!", false);
 
             playSound("wrong");
 
@@ -219,6 +222,22 @@ export default function QuizScene() {
         // NEXT QUESTION
         currentQuestion++;
         render();
+    }
+
+    function showFloatingText(text, good) {
+        const el = document.createElement("div");
+        el.className = "damage";
+
+        el.style.color = good ? "#2ecc71" : "#ff3b3b";
+        el.innerText = text;
+
+        document.body.appendChild(el);
+
+        el.style.left = "50%";
+        el.style.top = "35%";
+        el.style.transform = "translateX(-50%)";
+
+        setTimeout(() => el.remove(), 800);
     }
 
     return div;
